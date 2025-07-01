@@ -1,4 +1,5 @@
 kubernates 
+driver link: https://drive.google.com/drive/folders/1Yvs-iRxr2cFnVcL3eOHwiLiLrlD0HIok
 
 # === Cleanup old Docker Desktop (if needed) ===
 taskkill /F /IM "Docker Desktop.exe"
