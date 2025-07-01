@@ -1,0 +1,226 @@
+kubernates 
+
+# === Cleanup old Docker Desktop (if needed) ===
+taskkill /F /IM "Docker Desktop.exe"
+taskkill /F /IM "com.docker.backend.exe"
+wsl --unregister docker-desktop
+wsl --unregister docker-desktop-data
+rd /s /q "%AppData%\Docker"
+rd /s /q "%LocalAppData%\Docker"
+rd /s /q "%ProgramData%\Docker"
+rd /s /q "%UserProfile%\.docker"
+
+# === Install Docker Desktop manually ===
+# Download manually: https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe
+# During install: enable WSL2 backend + integrate Ubuntu
+
+# === Verify Docker Desktop ===
+docker ps
+
+# === Clean Minikube state ===
+minikube delete
+del %USERPROFILE%\.kube\config
+rd /s /q %USERPROFILE%\.minikube
+
+# === Start Minikube ===
+minikube start --driver=docker
+
+# === Verify Kubernetes node ===
+kubectl get nodes
+
+# === Enable dashboard ===
+minikube dashboard
+
+# === Optional: enable metrics-server ===
+minikube addons enable metrics-server
+
+----------------------------------------------------------------------------------------------
+
+✅ 1️⃣ Enable WSL2
+(PowerShell as Administrator)
+wsl --install
+wsl --set-default-version 2
+
+✅ 2️⃣ Install Docker Desktop
+(No CLI — Download & run the installer)
+🔗 https://www.docker.com/products/docker-desktop
+
+✅ 3️⃣ Verify Docker is working
+docker --version
+docker ps
+
+✅ 4️⃣ Install Chocolatey (for Minikube)
+Set-ExecutionPolicy Bypass -Scope Process -Force; `
+[System.Net.ServicePointManager]::SecurityProtocol = `
+[System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+✅ 5️⃣ Install Minikube
+choco install minikube -y
+
+✅ 6️⃣ Verify Minikube and kubectl
+minikube version
+kubectl version --client
+
+✅ 7️⃣ Start Minikube
+minikube start --driver=docker
+
+minikube start/delete
+minikube status
+minikube dashboard
+kubectl create deployment my-app --image=link
+kubectl get deployments
+kubectl get pods
+kubectl delete deployment my-app
+
+kubectl expose deployment my-app --type=LoadBalancer --port 80
+minikube service my-app
+kubectl get services
+
+--------------------------------------------------------------------------
+
+kubectl create deployment my-nginex-server --image=nginx:latest
+
+kubectl get deployments  // check the deployments created 
+
+kubectl get pods	// check for the pods
+
+localhost:80  // unable to access the nginx in browser because pod not exposed 
+
+kubectl expose deployment my-nginex-server --port:80 --type=LoadBalancer
+               // service/my-nginex-server exposed
+
+kubectl get service // lists all the service currently running 
+
+minikube service my-nginex-server // minikube will get to know about service
+
+
+deploying the project ---------------------------------------------------------
+
+create a project or in the existing project add Dockerfile with 
+
+Dockerfile -----
+
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /demo_app
+
+# Copy dependency files first for better caching
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application
+COPY . .
+
+# Expose the app's port
+EXPOSE 3000
+
+# Default command
+CMD ["npm", "start"]
+
+create docker repo in docker hub -------------------------------- 
+
+docker build -t charankumarh/demo_project:02 . // build a docker image at this location 
+	// to upload our project in docker hub 
+
+docker push docker push charankumarh/demo_project:02 // push the code to docker hub 
+
+
+kubectl create deployment demo-react-app --image=charankumarh/demo_project:02 
+	// create a deployments in the pods 
+
+kubectl get deployments  // get all the deployments running
+
+kubectl get pods // get all the pods running 
+		// kubectl scale deployment mynginex --replicas=2 to scale the pods in the 			deployments
+
+
+
+kubectl delete deployment // delete the deployment
+
+kubectl describe pods // details of pods
+
+kubectl expose deployment demo-react-app --type=LoadBalencer --port=300
+
+minikube service demo-react-app
+
+
+------------------------------------------------------------------------------------
+for the new release in the build
+
+docker build -t charankumarh/demo_project:03 .   // it will build docker image to uploade in 							deockerhub
+
+kubectl set image deployment  demo-react-app  demo-project-b2sqx=charankumarh/demo_project:03 // (container_name in pods)
+
+
+kubectl rollout status deployment demo-react-app // it wont complete
+
+kubectl rollout undo deployment demo-react-app
+
+-----------------------------------------------------------------------------------
+self healing 
+
+kubectl create development my-demo-app --image=philippaul/node-demo-app:01
+
+kubectl scale deployment my-demo-app --replicas=4
+
+// in local host enter /exit then pod get reset and again restart 
+
+----------------------------------------------------------------------------------
+
+in deployment-node-app.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-node-app-bu-yml   # Unique name for the Deployment
+spec:
+  replicas: 4      # 2 Pods at all times
+  selector:
+    matchLabels:
+      app: node-app   # Match the app label
+  template:
+    metadata:
+      labels:
+        app: node-app # Pod label must match selector
+    spec:
+      containers:
+        - name: node-app
+          image: philippaul/node-demo-app:01  # Replace this
+          
+kubectl apply -f deployment-node-app.yml
+
+
+----------------------------------------------------------------
+service-node-app-demo.yml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-node-service-app
+spec:
+  selector:
+    app: node-app
+  ports:
+    - name: http
+      port: 80        # External port
+      targetPort: 3000 # Pod's container port
+  type: LoadBalancer
+
+
+-----------------------------------------------------------------
+
+# Pull the Node app image
+docker pull philippaul/node-mongo-db:01
+
+# Create a custom network
+docker network create my-net
+
+# Run MongoDB on my-net
+docker run -d -p 27017:27017 --name mongo --network my-net mongo
+
+# Run the Node app on the same network
+docker run -d --name myapp --network my-net philippaul/node-mongo-db:01

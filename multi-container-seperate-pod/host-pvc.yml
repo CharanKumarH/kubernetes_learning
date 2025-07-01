@@ -1,0 +1,14 @@
+# persistance volume claim for host path
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: host-pvc # Unique name for the PersistentVolumeClaim  
+spec:
+  volumeName: host-pv # Name of the PersistentVolume to bind to
+  storageClassName: standard # Storage class for the PersistentVolumeClaim
+  accessModes:
+    - ReadWriteOnce # Access mode for the PersistentVolumeClaim
+  resources:
+    requests:
+      storage: 1Gi # Size of the PersistentVolumeClaim
+

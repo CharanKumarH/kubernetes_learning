@@ -1,0 +1,31 @@
+# # adding persistent volume for host path
+# apiVersion: v1
+# kind: PersistentVolume  
+# metadata:
+#   name: host-pv # Unique name for the PersistentVolume
+# spec:
+#   capacity:
+#     storage: 1Gi # Size of the PersistentVolume
+#   volumeMode: Filesystem # Volume mode for the PersistentVolume
+#   storageClassName: standard # Storage class for the PersistentVolume
+#   AccessModes:
+#     - ReadWriteOnce # Access mode for the PersistentVolume
+#   hostPath: /data/  # Host path for the PersistentVolume
+#   type: DirectoryOrCreate # Type of the host path
+
+# adding persistent volume for host path
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: host-pv # Unique name for the PersistentVolume
+spec:
+  capacity:
+    storage: 1Gi # Size of the PersistentVolume
+  volumeMode: Filesystem # Volume mode for the PersistentVolume
+  storageClassName: standard # Storage class for the PersistentVolume
+  accessModes:
+    - ReadWriteOnce # Access mode for the PersistentVolume
+  # persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /data/ # Host path for the PersistentVolume
+    type: DirectoryOrCreate # Type of the host path

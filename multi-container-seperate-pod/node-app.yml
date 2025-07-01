@@ -1,0 +1,46 @@
+# node app deployment from philippau l/node-mongo-db: 02
+apiVersion: apps/v1
+kind: Deployment    
+metadata:
+  name: node-app-deployment # Unique name for the Deployment  
+spec:
+  replicas: 6 # 2 Pods at all times
+  selector:
+    matchLabels:
+      app: node-app # Match the app label
+  template:
+    metadata:
+      labels:
+        app: node-app # Pod label must match selector
+    spec:   
+      containers:
+       - name: node-app
+         image: philippaul/node-mongo-db:04
+         env:
+           - name: MONGO_HOST
+             valueFrom:   # Name of the MongoDB service
+              configMapKeyRef:
+                name: mongo-config # Reference to the ConfigMap
+                key: MONGO_HOST
+           - name: MONGO_PORT
+             valueFrom:   # Default MongoDB port
+              configMapKeyRef:
+                name: mongo-config # Reference to the ConfigMap
+                key: MONGO_PORT
+
+
+---
+
+# service for the node app
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-app-service # Unique name for the Service
+spec:
+  selector:
+    app: node-app # Match the app label 
+  ports:
+   - name: http
+     port: 8080 # Port on which the service will be exposed
+     targetPort: 3000 # Port on the container to forward traffic to
+  type: LoadBalancer # Expose the service on a port on each Node in the cluster

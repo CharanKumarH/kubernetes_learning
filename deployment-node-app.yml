@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-node-app-bu-yml   # Unique name for the Deployment
+spec:
+  replicas: 4      # 2 Pods at all times
+  selector:
+    matchLabels:
+      app: node-app   # Match the app label
+  template:
+    metadata:
+      labels:
+        app: node-app # Pod label must match selector
+    spec:
+      containers:
+        - name: node-app
+          image: philippaul/node-demo-app:02  # Replace this
+          
+  
